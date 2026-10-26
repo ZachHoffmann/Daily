@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Daily">
-  <meta name="theme-color" content="#2d232e">
+  <meta name="theme-color" content="#352430">
   <link rel="apple-touch-icon" href="Daily.png">
   <link rel="icon" type="image/png" href="Daily.png">
   <style>
@@ -19,12 +19,18 @@
       --sun-gold: linear-gradient(180deg, #e8b368 0%, #cf8d46 100%);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+    
+    /* Fixes the white/black gap during iOS overscroll bounce */
+    html { background-color: var(--bg-top); }
+    
     body {
-      background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 38%, var(--bg-bot) 100%);
+      background-color: var(--bg-top);
+      background-image: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 38%, var(--bg-bot) 100%);
       background-attachment: fixed; color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       min-height: 100vh; padding: calc(env(safe-area-inset-top, 0px) + 16px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
     }
+    
     .container { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
     header { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 4px 2px; }
     h1 { font-family: ui-serif, Georgia, serif; font-size: 1.7rem; font-weight: 700; color: #f3c886; letter-spacing: -0.01em; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
@@ -68,7 +74,6 @@
     .btn-energy:active { background: var(--sun-gold); color: #1c150e; border-color: #f2c785; transform: scale(0.95); }
     .btn-energy:active span { color: #1c150e; }
 
-    /* Insights Section */
     .insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .insight-box {
       background: rgba(20, 32, 35, 0.5); border: 1px solid rgba(218, 175, 118, 0.1); border-radius: 10px;
