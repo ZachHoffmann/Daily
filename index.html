@@ -20,7 +20,6 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
     
-    /* Fixes the white/black gap during iOS overscroll bounce */
     html { background-color: var(--bg-top); }
     
     body {
@@ -74,14 +73,14 @@
     .btn-energy:active { background: var(--sun-gold); color: #1c150e; border-color: #f2c785; transform: scale(0.95); }
     .btn-energy:active span { color: #1c150e; }
 
-    .insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .insight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .insight-box {
       background: rgba(20, 32, 35, 0.5); border: 1px solid rgba(218, 175, 118, 0.1); border-radius: 10px;
-      padding: 10px 4px; text-align: center; display: flex; flex-direction: column; gap: 4px;
+      padding: 12px 6px; text-align: center; display: flex; flex-direction: column; justify-content: center; gap: 6px;
       box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
     }
-    .insight-val { font-family: ui-serif, Georgia, serif; font-size: 1.05rem; font-weight: 700; color: #f3c886; }
-    .insight-label { font-size: 0.55rem; font-weight: 600; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; line-height: 1.25;}
+    .insight-val { font-family: ui-serif, Georgia, serif; font-size: 1.15rem; font-weight: 700; color: #f3c886; }
+    .insight-label { font-size: 0.55rem; font-weight: 600; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; line-height: 1.3;}
     
     .actions-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
     .btn-secondary {
@@ -106,6 +105,7 @@
     .log-text { font-size: 0.88rem; line-height: 1.38; color: var(--text); word-break: break-word; user-select: text; }
     .btn-delete { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 2px 6px; font-size: 1.15rem; line-height: 1; }
     
+    .log-footer { font-size: 0.7rem; text-align: center; color: var(--muted); margin-top: 4px; font-style: italic; }
     .empty-state { text-align: center; padding: 24px 12px; color: var(--muted); font-size: 0.82rem; font-style: italic; font-family: ui-serif, Georgia, serif; }
     
     #toast {
@@ -153,12 +153,13 @@
 
     <div class="actions-row">
       <button class="btn-secondary" id="btnExportAI">Copy for AI Export</button>
-      <button class="btn-secondary btn-danger" id="btnClearAll">Clear</button>
+      <button class="btn-secondary btn-danger" id="btnClearAll">Clear All Memory</button>
     </div>
 
     <section class="card">
-      <div class="card-title">Activity Feed</div>
+      <div class="card-title">Log</div>
       <div class="feed-container" id="feedContainer"></div>
+      <div class="log-footer" id="logFooter"></div>
     </section>
   </div>
   <div id="toast">Copied</div>
@@ -166,19 +167,25 @@
   <script>
     const STORAGE_KEY = 'daily_tracker_data';
     let logs = [];
+    
+    // Global variable to hold synthesized metrics for AI export
+    let currentSynthesis = { peak: '--', crash: '--', delta: '--', fuel: '--' };
 
     function init() {
       document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
       resetMealTime();
       try { logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { logs = []; }
+      
       const p = new URLSearchParams(window.location.search);
-      if (p.get('sleep') || p.get('hrv') || p.get('rhr')) {
+      if (p.get('sleep') || p.get('awake') || p.get('hrv') || p.get('rhr')) {
         const parts = [];
         if (p.get('sleep')) parts.push('Sleep ' + parseFloat(p.get('sleep')) + ' hrs');
+        if (p.get('awake')) parts.push('Awake ' + parseInt(p.get('awake')) + ' mins');
         if (p.get('hrv')) parts.push('HRV ' + Math.round(parseFloat(p.get('hrv'))) + ' ms');
         if (p.get('rhr')) parts.push('RHR ' + Math.round(parseFloat(p.get('rhr'))) + ' bpm');
+        
         addLog('biometrics', parts.join(' | '), new Date().toISOString());
-        showToast('Biometrics Synced');
+        showToast('Baseline Synced');
         window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
       }
       renderFeed();
@@ -210,13 +217,13 @@
       if (!el) return;
 
       if (logs.length < 5) {
-        el.innerHTML = '<div class="empty-state" style="grid-column: span 3; padding: 10px;">Insights compile as you log more data.</div>';
+        el.innerHTML = '<div class="empty-state" style="grid-column: span 2; padding: 10px;">Insights compile as you log more data.</div>';
         return;
       }
 
       const chronLogs = [...logs].reverse();
-
-      // 1. Peak Energy Window (Avg time of 4 & 5 ratings)
+      
+      // 1. Peak Energy Window
       let highEnergyTimes = [];
       chronLogs.forEach(l => {
         if (l.type === 'energy' && (l.content.startsWith('4') || l.content.startsWith('5'))) {
@@ -229,14 +236,10 @@
         const avgMins = highEnergyTimes.reduce((a,b)=>a+b, 0) / highEnergyTimes.length;
         const h = Math.floor(avgMins / 60);
         const m = Math.floor(avgMins % 60);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        const h12 = h % 12 || 12;
-        peakTimeStr = `${h12}:${m.toString().padStart(2, '0')} ${ampm}`;
-      } else if (chronLogs.some(l => l.type === 'energy')) {
-        peakTimeStr = 'N/A';
-      }
+        peakTimeStr = `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+      } else if (chronLogs.some(l => l.type === 'energy')) peakTimeStr = 'N/A';
 
-      // 2. Post-Meal Crash Rate (1-2 energy within 3hrs of a meal)
+      // 2. Dietary Crash Rate (1-2 energy within 3hrs of a meal)
       let mealsTotal = 0, crashesTotal = 0;
       for (let i = 0; i < chronLogs.length; i++) {
         if (chronLogs[i].type === 'meal') {
@@ -253,7 +256,7 @@
       }
       let crashRateStr = mealsTotal > 0 ? Math.round((crashesTotal / mealsTotal) * 100) + '%' : '--%';
 
-      // 3. Sleep Delta (>7h vs <7h)
+      // 3. Energy Delta (>7h Sleep)
       const days = {};
       chronLogs.forEach(l => {
         const dStr = new Date(l.timestamp).toISOString().split('T')[0];
@@ -272,19 +275,55 @@
           if (day.sleep >= 7) goodSleep.push(avgE); else badSleep.push(avgE);
         }
       });
-
       let sleepImpactStr = '--';
       if (goodSleep.length > 0 && badSleep.length > 0) {
         const diff = (goodSleep.reduce((a,b)=>a+b,0)/goodSleep.length) - (badSleep.reduce((a,b)=>a+b,0)/badSleep.length);
         sleepImpactStr = (diff > 0 ? '+' : '') + diff.toFixed(1) + ' pt';
-      } else if (goodSleep.length > 0) {
-        sleepImpactStr = 'Need <7h logs';
-      } else if (badSleep.length > 0) {
-        sleepImpactStr = 'Need >7h logs';
+      } else if (goodSleep.length > 0) sleepImpactStr = 'Need <7h logs';
+      else if (badSleep.length > 0) sleepImpactStr = 'Need >7h logs';
+
+      // 4. Optimal Fuel Window (Avg time of meals leading to a 4/5 energy rating that day)
+      let goodFuelMins = [];
+      const mealsByDay = {};
+      const energyByDay = {};
+      chronLogs.forEach(l => {
+        const dStr = new Date(l.timestamp).toISOString().split('T')[0];
+        if (!mealsByDay[dStr]) mealsByDay[dStr] = [];
+        if (!energyByDay[dStr]) energyByDay[dStr] = [];
+        if (l.type === 'meal') mealsByDay[dStr].push(new Date(l.timestamp));
+        if (l.type === 'energy') energyByDay[dStr].push(l);
+      });
+
+      for (const dStr in mealsByDay) {
+        const dayMeals = mealsByDay[dStr];
+        const dayEnergy = energyByDay[dStr];
+        if (!dayMeals.length || !dayEnergy.length) continue;
+        
+        // If highest energy rating of the afternoon was a 4 or 5
+        const maxE = Math.max(...dayEnergy.map(e => parseInt(e.content.charAt(0))));
+        if (maxE >= 4) {
+          // Calculate avg time of meals before the high energy score
+          const highEnergyLog = dayEnergy.find(e => parseInt(e.content.charAt(0)) === maxE);
+          const heTime = new Date(highEnergyLog.timestamp).getTime();
+          const validMeals = dayMeals.filter(m => m.getTime() < heTime);
+          validMeals.forEach(m => goodFuelMins.push(m.getHours() * 60 + m.getMinutes()));
+        }
       }
+      
+      let fuelWindowStr = '--:--';
+      if (goodFuelMins.length > 0) {
+        const avgMins = goodFuelMins.reduce((a,b)=>a+b, 0) / goodFuelMins.length;
+        const h = Math.floor(avgMins / 60);
+        const m = Math.floor(avgMins % 60);
+        fuelWindowStr = `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+      } else if (mealsTotal > 0) fuelWindowStr = 'N/A';
+
+      // Save for AI Export
+      currentSynthesis = { peak: peakTimeStr, crash: crashRateStr, delta: sleepImpactStr, fuel: fuelWindowStr };
 
       el.innerHTML = `
         <div class="insight-box"><div class="insight-val">${peakTimeStr}</div><div class="insight-label">Peak Focus<br>Window</div></div>
+        <div class="insight-box"><div class="insight-val">${fuelWindowStr}</div><div class="insight-label">Optimal Fuel<br>Window</div></div>
         <div class="insight-box"><div class="insight-val">${crashRateStr}</div><div class="insight-label">Dietary<br>Crash Rate</div></div>
         <div class="insight-box"><div class="insight-val">${sleepImpactStr}</div><div class="insight-label">Energy Delta<br>(7h+ Sleep)</div></div>
       `;
@@ -293,13 +332,31 @@
     function renderFeed() {
       updateInsights();
       const box = document.getElementById('feedContainer');
-      if (!logs.length) { box.innerHTML = '<div class="empty-state">No entries logged yet.</div>'; return; }
-      box.innerHTML = logs.map(item => {
+      const footer = document.getElementById('logFooter');
+      
+      if (!logs.length) { 
+        box.innerHTML = '<div class="empty-state">No entries logged yet.</div>'; 
+        footer.textContent = "";
+        return; 
+      }
+
+      // Filter logic: Only show the last 48 hours to keep the UI clean
+      const cutoffTime = new Date().getTime() - (48 * 60 * 60 * 1000);
+      const recentLogs = logs.filter(l => new Date(l.timestamp).getTime() >= cutoffTime);
+      const hiddenCount = logs.length - recentLogs.length;
+
+      box.innerHTML = recentLogs.map(item => {
         const d = new Date(item.timestamp);
         const timeStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
         const safe = String(item.content).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         return `<div class="log-item"><div class="log-body"><div class="log-meta"><span class="badge badge-${item.type}">${item.type}</span><span class="log-time">${timeStr}</span></div><div class="log-text">${safe}</div></div><button class="btn-delete" data-id="${item.id}">&times;</button></div>`;
       }).join('');
+
+      if (hiddenCount > 0) {
+        footer.textContent = `Showing last 48 hours (${hiddenCount} older logs hidden, but saved in memory for AI).`;
+      } else {
+        footer.textContent = "";
+      }
     }
 
     function setupEvents() {
@@ -329,16 +386,35 @@
       });
 
       document.getElementById('btnClearAll').addEventListener('click', () => {
-        if (logs.length && confirm('Clear all logged entries?')) { logs = []; saveLogs(); renderFeed(); showToast('History Cleared'); }
+        if (logs.length && confirm('Warning: This will permanently delete your entire stored history and reset all calculations. Continue?')) { 
+          logs = []; saveLogs(); renderFeed(); showToast('Memory Cleared'); 
+        }
       });
 
       document.getElementById('btnExportAI').addEventListener('click', () => {
         if (!logs.length) return showToast('No logs to export');
-        const lines = logs.slice().reverse().map(x => `[${new Date(x.timestamp).toISOString().replace('T', ' ').slice(0, 16)}] ${x.type.toUpperCase()}: ${x.content}`).join('\n');
-        const text = `Chronological food, energy, and biometrics log. Analyze meal timing, energy dips, and sleep/HRV patterns:\n\n${lines}`;
+        
+        let exportText = "[Calculated Synthesis Trends]\n";
+        exportText += `- Peak Focus Window: ${currentSynthesis.peak}\n`;
+        exportText += `- Optimal Fuel Window: ${currentSynthesis.fuel}\n`;
+        exportText += `- Dietary Crash Rate: ${currentSynthesis.crash}\n`;
+        exportText += `- Energy Delta (7h+ Sleep): ${currentSynthesis.delta}\n\n`;
+
+        exportText += "[Raw Biometrics Archive]\n";
+        const bios = logs.filter(l => l.type === 'biometrics').reverse();
+        bios.forEach(b => {
+          exportText += `${new Date(b.timestamp).toISOString().split('T')[0]} | ${b.content}\n`;
+        });
+        exportText += "\n[Chronological Timeline]\n";
+        
+        const timelines = logs.filter(l => l.type !== 'biometrics').reverse();
+        timelines.forEach(x => {
+          exportText += `[${new Date(x.timestamp).toISOString().replace('T', ' ').slice(0, 16)}] ${x.type.toUpperCase()}: ${x.content}\n`;
+        });
+
         if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).then(() => showToast('Copied for AI')).catch(() => fallbackCopy(text));
-        } else fallbackCopy(text);
+          navigator.clipboard.writeText(exportText).then(() => showToast('Copied for AI')).catch(() => fallbackCopy(exportText));
+        } else fallbackCopy(exportText);
       });
     }
 
