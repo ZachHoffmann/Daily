@@ -7,192 +7,191 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Daily">
-  <meta name="theme-color" content="#090d16">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230f172a'/><text x='50' y='64' font-size='44' font-family='-apple-system, sans-serif' font-weight='800' fill='%2338bdf8' text-anchor='middle'>D</text></svg>">
+  <meta name="theme-color" content="#141413">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0' y1='1' x2='1' y2='0'><stop offset='0%' stop-color='%23ef4444'/><stop offset='50%' stop-color='%23f97316'/><stop offset='100%' stop-color='%23facc15'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g)'/><text x='50' y='66' font-size='48' font-family='-apple-system,sans-serif' font-weight='800' fill='%23141413' text-anchor='middle'>D</text></svg>">
   <style>
     :root {
-      --bg: #090d16;
-      --card: #131b2e;
-      --card-inner: #0d1424;
-      --border: #232f48;
-      --border-focus: #3b82f6;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-subtle: #64748b;
-      --accent: #2563eb;
-      --accent-glow: #3b82f6;
-      --danger: #ef4444;
-      --badge-meal-bg: #1e293b;
-      --badge-meal-txt: #93c5fd;
-      --badge-energy-bg: #2d2615;
-      --badge-energy-txt: #fcd34d;
-      --badge-bio-bg: #261b3b;
-      --badge-bio-txt: #d8b4fe;
+      --bg: #141413; --card: #1f1e1d; --inner: #141413; --border: #33312e;
+      --text: #fafaf9; --muted: #a8a29e; --orange: #f97316;
+      --sunset: linear-gradient(135deg, #ef4444 0%, #f97316 50%, #facc15 100%);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, sans-serif; min-height: 100vh; padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px); }
+    .container { max-width: 440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    header { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 2px; }
+    h1 { font-size: 1.55rem; font-weight: 800; letter-spacing: -0.03em; background: var(--sunset); -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: #f97316; }
+    .header-date { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+    .card-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    .input-row { display: grid; grid-template-columns: 104px 1fr; gap: 8px; }
+    input[type="time"], input[type="text"] { background: var(--inner); border: 1px solid var(--border); border-radius: 10px; padding: 12px; color: var(--text); font-size: 16px; outline: none; user-select: text; color-scheme: dark; width: 100%; }
+    input[type="time"] { text-align: center; font-weight: 600; }
+    input:focus { border-color: var(--orange); }
+    .btn-primary { width: 100%; background: var(--sunset); color: #141413; font-size: 0.95rem; font-weight: 800; padding: 13px; border: none; border-radius: 10px; cursor: pointer; }
+    .btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+    .energy-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .btn-energy { aspect-ratio: 1; background: var(--inner); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 1.15rem; font-weight: 800; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .btn-energy span { font-size: 0.58rem; font-weight: 600; color: var(--muted); }
+    .btn-energy[data-score="1"] { border-bottom: 3px solid #ef4444; }
+    .btn-energy[data-score="2"] { border-bottom: 3px solid #f97316; }
+    .btn-energy[data-score="3"] { border-bottom: 3px solid #fb923c; }
+    .btn-energy[data-score="4"] { border-bottom: 3px solid #f59e0b; }
+    .btn-energy[data-score="5"] { border-bottom: 3px solid #facc15; }
+    .btn-energy:active { background: var(--sunset); color: #141413; transform: scale(0.94); }
+    .btn-energy:active span { color: #141413; }
+    .actions-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+    .btn-secondary { background: var(--card); border: 1px solid var(--border); color: var(--text); font-size: 0.82rem; font-weight: 600; padding: 11px 14px; border-radius: 10px; cursor: pointer; }
+    .btn-secondary:active { background: var(--inner); }
+    .btn-danger { color: #f87171; border-color: rgba(239, 68, 68, 0.35); }
+    .feed-container { display: flex; flex-direction: column; gap: 8px; }
+    .log-item { background: var(--inner); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .log-body { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden; }
+    .log-meta { display: flex; align-items: center; gap: 6px; }
+    .badge { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
+    .badge-meal { background: rgba(249, 115, 22, 0.18); color: #fb923c; }
+    .badge-energy { background: rgba(250, 204, 21, 0.18); color: #fde047; }
+    .badge-biometrics { background: rgba(239, 68, 68, 0.18); color: #fca5a5; }
+    .log-time { font-size: 0.72rem; color: var(--muted); }
+    .log-text { font-size: 0.88rem; line-height: 1.35; color: var(--text); word-break: break-word; user-select: text; }
+    .btn-delete { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 2px 6px; font-size: 1.15rem; line-height: 1; }
+    .empty-state { text-align: center; padding: 24px 12px; color: var(--muted); font-size: 0.82rem; }
+    #toast { position: fixed; bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); left: 50%; transform: translateX(-50%) translateY(80px); background: var(--sunset); color: #141413; padding: 9px 18px; border-radius: 20px; font-size: 0.82rem; font-weight: 700; opacity: 0; pointer-events: none; transition: 0.2s ease; z-index: 100; }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Daily</h1>
+      <div class="header-date" id="currentDateDisplay"></div>
+    </header>
+    <section class="card">
+      <div class="card-title">Log Meal / Snack</div>
+      <div class="input-row">
+        <input type="time" id="mealTime" aria-label="Meal Time">
+        <input type="text" id="foodInput" placeholder="e.g. McDouble, fries, water" autocomplete="off" enterkeyhint="done">
+      </div>
+      <button class="btn-primary" id="btnRecordFood">Record Meal</button>
+    </section>
+    <section class="card">
+      <div class="card-title">Energy Level (1-5)</div>
+      <div class="energy-grid">
+        <button class="btn-energy" data-score="1">1<span>Low</span></button>
+        <button class="btn-energy" data-score="2">2<span>Sluggish</span></button>
+        <button class="btn-energy" data-score="3">3<span>Neutral</span></button>
+        <button class="btn-energy" data-score="4">4<span>Good</span></button>
+        <button class="btn-energy" data-score="5">5<span>Sharp</span></button>
+      </div>
+    </section>
+    <div class="actions-row">
+      <button class="btn-secondary" id="btnExportAI">Copy for AI Export</button>
+      <button class="btn-secondary btn-danger" id="btnClearAll">Clear</button>
+    </div>
+    <section class="card">
+      <div class="card-title">Activity Feed</div>
+      <div class="feed-container" id="feedContainer"></div>
+    </section>
+  </div>
+  <div id="toast">Copied</div>
+  <script>
+    const STORAGE_KEY = 'daily_tracker_data';
+    let logs = [];
+
+    function init() {
+      document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      resetMealTime();
+      try { logs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { logs = []; }
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('sleep') || p.get('hrv') || p.get('rhr')) {
+        const parts = [];
+        if (p.get('sleep')) parts.push('Sleep ' + parseFloat(p.get('sleep')) + ' hrs');
+        if (p.get('hrv')) parts.push('HRV ' + Math.round(parseFloat(p.get('hrv'))) + ' ms');
+        if (p.get('rhr')) parts.push('RHR ' + Math.round(parseFloat(p.get('rhr'))) + ' bpm');
+        addLog('biometrics', parts.join(' | '), new Date().toISOString());
+        showToast('Biometrics Synced');
+        window.history.replaceState({}, document.title, window.location.origin + window.location.pathname);
+      }
+      renderFeed();
+      setupEvents();
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+    function resetMealTime() {
+      const now = new Date();
+      document.getElementById('mealTime').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
     }
 
-    body {
-      background-color: var(--bg);
-      color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px) 16px;
-      overflow-x: hidden;
+    function saveLogs() { localStorage.setItem(STORAGE_KEY, JSON.stringify(logs)); }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    .container {
-      max-width: 440px;
-      margin: 0 auto;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+    function addLog(type, content, iso) {
+      logs.unshift({ id: Date.now() + Math.random(), timestamp: iso || new Date().toISOString(), type, content });
+      logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      saveLogs(); renderFeed();
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      padding: 4px 2px;
+    function renderFeed() {
+      const box = document.getElementById('feedContainer');
+      if (!logs.length) { box.innerHTML = '<div class="empty-state">No entries logged yet.</div>'; return; }
+      box.innerHTML = logs.map(item => {
+        const d = new Date(item.timestamp);
+        const timeStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
+        const safe = String(item.content).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        return `<div class="log-item"><div class="log-body"><div class="log-meta"><span class="badge badge-${item.type}">${item.type}</span><span class="log-time">${timeStr}</span></div><div class="log-text">${safe}</div></div><button class="btn-delete" data-id="${item.id}">&times;</button></div>`;
+      }).join('');
     }
 
-    h1 {
-      font-size: 1.45rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: var(--text-main);
+    function setupEvents() {
+      const food = document.getElementById('foodInput'), time = document.getElementById('mealTime');
+      const submitMeal = () => {
+        const val = food.value.trim();
+        if (!val) return;
+        const d = new Date();
+        if (time.value) { const [h, m] = time.value.split(':').map(Number); d.setHours(h, m, 0, 0); }
+        addLog('meal', val, d.toISOString());
+        food.value = ''; food.blur(); resetMealTime(); showToast('Meal Recorded');
+      };
+      document.getElementById('btnRecordFood').addEventListener('click', submitMeal);
+      food.addEventListener('keydown', e => { if (e.key === 'Enter') submitMeal(); });
+
+      const labels = { 1: '1/5 - Low', 2: '2/5 - Sluggish', 3: '3/5 - Neutral', 4: '4/5 - Good', 5: '5/5 - Sharp' };
+      document.querySelectorAll('.btn-energy').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const s = btn.getAttribute('data-score');
+          addLog('energy', labels[s]); showToast('Logged Energy: ' + s + '/5');
+        });
+      });
+
+      document.getElementById('feedContainer').addEventListener('click', e => {
+        const del = e.target.closest('.btn-delete');
+        if (del) { logs = logs.filter(x => x.id !== parseFloat(del.getAttribute('data-id'))); saveLogs(); renderFeed(); }
+      });
+
+      document.getElementById('btnClearAll').addEventListener('click', () => {
+        if (logs.length && confirm('Clear all logged entries?')) { logs = []; saveLogs(); renderFeed(); showToast('History Cleared'); }
+      });
+
+      document.getElementById('btnExportAI').addEventListener('click', () => {
+        if (!logs.length) return showToast('No logs to export');
+        const lines = logs.slice().reverse().map(x => `[${new Date(x.timestamp).toISOString().replace('T', ' ').slice(0, 16)}] ${x.type.toUpperCase()}: ${x.content}`).join('\n');
+        const text = `Chronological food, energy, and biometrics log. Analyze meal timing, energy dips, and sleep/HRV patterns:\n\n${lines}`;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => showToast('Copied for AI')).catch(() => fallbackCopy(text));
+        } else fallbackCopy(text);
+      });
     }
 
-    .header-date {
-      font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--text-muted);
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast('Copied for AI');
     }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-    }
-
-    .card-title {
-      font-size: 0.72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-    }
-
-    .input-row {
-      display: grid;
-      grid-template-columns: 102px 1fr;
-      gap: 8px;
-    }
-
-    input[type="time"],
-    input[type="text"] {
-      background: var(--card-inner);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      color: var(--text-main);
-      font-size: 16px; /* Prevents auto-zoom in Safari iOS */
-      outline: none;
-      user-select: text;
-      transition: border-color 0.15s ease;
-      color-scheme: dark;
-    }
-
-    input[type="time"] {
-      text-align: center;
-      font-weight: 600;
-    }
-
-    input[type="text"]:focus,
-    input[type="time"]:focus {
-      border-color: var(--border-focus);
-    }
-
-    .btn-primary {
-      width: 100%;
-      background: var(--accent);
-      color: #ffffff;
-      font-size: 0.92rem;
-      font-weight: 600;
-      padding: 13px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: opacity 0.1s ease, transform 0.05s ease;
-    }
-
-    .btn-primary:active {
-      opacity: 0.9;
-      transform: scale(0.98);
-    }
-
-    .energy-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-    }
-
-    .btn-energy {
-      aspect-ratio: 1;
-      background: var(--card-inner);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text-main);
-      font-size: 1.15rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      transition: background-color 0.1s ease, transform 0.05s ease, border-color 0.1s ease;
-    }
-
-    .btn-energy span {
-      font-size: 0.6rem;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .btn-energy:active {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent-glow);
-      transform: scale(0.94);
-    }
-
-    .btn-energy:active span {
-      color: rgba(255, 255, 255, 0.8);
-    }
-
-    .actions-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-    }
-
-    .btn-secondary {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+  </script>
+</body>
+</html>
